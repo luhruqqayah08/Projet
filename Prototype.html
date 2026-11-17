@@ -1,0 +1,1331 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font:
+          14px -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #fff;
+        color: #000;
+      }
+      img {
+        max-width: 100%;
+      }
+      [hidden]:not([hidden="until-found" i]) {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <title>Prototype Mbay Direct</title>
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+    />
+    <style>
+      /* Layout: une application étroite à gauche (vues Producteur et Client), un panneau à droite qui montre le circuit de l'argent et le journal de la démo. */
+      :root {
+        --bg: #fbf6ee;
+        --surface: #ffffff;
+        --sand: #f1e6d6;
+        --fg: #3b2a24;
+        --muted: #6a5850;
+        --line: #e0d3c0;
+        --accent: #e87722;
+        --accent-ink: #2a1a12;
+        --green: #2e6b3e;
+        --green-bg: #e3efe5;
+        --warn: #8a4a0b;
+        --warn-bg: #fbe7d3;
+        --danger: #a6352b;
+        --danger-bg: #f8deda;
+        --font:
+          "DM Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #241915;
+          --surface: #2f221d;
+          --sand: #3a2b25;
+          --fg: #f4ebdd;
+          --muted: #bba999;
+          --line: #4a3a32;
+          --accent: #f08a3c;
+          --accent-ink: #2a1a12;
+          --green: #7bc48f;
+          --green-bg: #23382a;
+          --warn: #f2b77a;
+          --warn-bg: #4a3322;
+          --danger: #f0877b;
+          --danger-bg: #4a2622;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #241915;
+        --surface: #2f221d;
+        --sand: #3a2b25;
+        --fg: #f4ebdd;
+        --muted: #bba999;
+        --line: #4a3a32;
+        --accent: #f08a3c;
+        --accent-ink: #2a1a12;
+        --green: #7bc48f;
+        --green-bg: #23382a;
+        --warn: #f2b77a;
+        --warn-bg: #4a3322;
+        --danger: #f0877b;
+        --danger-bg: #4a2622;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--font);
+        font-size: 16px;
+        line-height: 1.45;
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+        padding-block: 20px 48px;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.2;
+        text-wrap: balance;
+      }
+      p {
+        margin: 0;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      .shell {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: grid;
+        gap: 28px;
+        grid-template-columns: minmax(0, 1fr);
+      }
+      @media (min-width: 940px) {
+        .shell {
+          grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+          align-items: start;
+        }
+        .side {
+          position: sticky;
+          top: 20px;
+        }
+      }
+      .top {
+        max-width: 1080px;
+        margin: 0 auto 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 24px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .brand h1 {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .brand span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .badge-demo {
+        background: var(--warn-bg);
+        color: var(--warn);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 99px;
+      }
+      .tabs {
+        display: inline-flex;
+        background: var(--sand);
+        padding: 4px;
+        border-radius: 12px;
+        gap: 4px;
+      }
+      .tabs button {
+        border: 0;
+        background: transparent;
+        padding: 9px 18px;
+        border-radius: 9px;
+        font-weight: 700;
+        cursor: pointer;
+        color: var(--muted);
+      }
+      .tabs button[aria-pressed="true"] {
+        background: var(--surface);
+        color: var(--fg);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      :focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+      .view {
+        display: grid;
+        gap: 20px;
+      }
+      .sec-title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .who {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--accent-ink);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 20px;
+        flex: none;
+      }
+      label,
+      legend {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+      }
+      input[type="number"],
+      input[type="date"],
+      input[type="text"],
+      input[type="tel"],
+      select {
+        width: 100%;
+        padding: 11px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        min-height: 44px;
+      }
+      .grid2 {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      fieldset {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+      }
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .choice {
+        position: relative;
+      }
+      .choice input {
+        position: absolute;
+        opacity: 0;
+        inset: 0;
+        cursor: pointer;
+      }
+      .choice span {
+        display: block;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg);
+        font-weight: 500;
+        color: var(--fg);
+        min-height: 44px;
+      }
+      .choice input:checked + span {
+        border-color: var(--green);
+        background: var(--green-bg);
+        color: var(--fg);
+        box-shadow: inset 0 0 0 1px var(--green);
+      }
+      .choice input:focus-visible + span {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+        background: var(--accent);
+        color: var(--accent-ink);
+        min-height: 46px;
+      }
+      .btn.alt {
+        background: var(--sand);
+        color: var(--fg);
+      }
+      .btn.danger {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+      .btn.small {
+        padding: 8px 12px;
+        min-height: 38px;
+        font-size: 14px;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .hint {
+        font-size: 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--green-bg);
+        color: var(--fg);
+      }
+      .hint.bad {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+      .err {
+        color: var(--danger);
+        font-size: 14px;
+        min-height: 0;
+      }
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+        display: grid;
+        gap: 10px;
+        background: var(--surface);
+      }
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .card h3 {
+        font-size: 17px;
+      }
+      .price {
+        font-weight: 700;
+        font-size: 18px;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .chip {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 99px;
+        font-size: 13px;
+        font-weight: 700;
+        background: var(--sand);
+        color: var(--fg);
+      }
+      .chip.ok {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+      .chip.wait {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+      .chip.bad {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .filters button {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: 8px 14px;
+        border-radius: 99px;
+        cursor: pointer;
+        font-weight: 500;
+        min-height: 40px;
+      }
+      .filters button[aria-pressed="true"] {
+        background: var(--fg);
+        color: var(--bg);
+        border-color: var(--fg);
+      }
+      .empty {
+        color: var(--muted);
+        padding: 12px 0;
+        font-size: 15px;
+      }
+      .total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 18px;
+        font-variant-numeric: tabular-nums;
+      }
+      .money {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .money div {
+        background: var(--sand);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .money b {
+        display: block;
+        font-size: 20px;
+        font-variant-numeric: tabular-nums;
+      }
+      .money small {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .money .held {
+        background: var(--warn-bg);
+      }
+      .money .held small {
+        color: var(--warn);
+      }
+      .log {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+        max-height: 340px;
+        overflow-y: auto;
+      }
+      .log li {
+        font-size: 14px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: var(--sand);
+        display: grid;
+        gap: 2px;
+      }
+      .log time {
+        color: var(--muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      .note {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .card,
+        .log li {
+          animation: pop 0.25s ease-out;
+        }
+        @keyframes pop {
+          from {
+            opacity: 0.4;
+            transform: translateY(4px);
+          }
+        }
+      }
+    </style>
+
+    <header class="top">
+      <div class="brand">
+        <h1>Mbay Direct</h1>
+        <span>Vendre avant de récolter</span>
+        <span class="badge-demo">Démo, aucun vrai paiement</span>
+      </div>
+      <div class="tabs" role="group" aria-label="Choisir le rôle">
+        <button type="button" id="tabP" aria-pressed="true">Producteur</button>
+        <button type="button" id="tabC" aria-pressed="false">Client</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <main>
+        <!-- VUE PRODUCTEUR -->
+        <section class="view" id="view-producteur" aria-label="Vue producteur">
+          <div class="panel">
+            <div class="who">
+              <div class="avatar" aria-hidden="true">S</div>
+              <div>
+                <h2 class="sec-title">Samba</h2>
+                <p class="sub">Producteur · région de l’Est · GIE Tamba Yaax</p>
+              </div>
+            </div>
+          </div>
+
+          <form class="panel" id="offerForm" novalidate>
+            <h2 class="sec-title">Publier une offre</h2>
+            <div class="grid2">
+              <div class="field">
+                <label for="fProd">Produit</label>
+                <select id="fProd">
+                  <option>Maïs</option>
+                  <option>Manioc</option>
+                  <option>Niébé</option>
+                  <option>Arachide</option>
+                  <option>Mil</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="fSurf">Surface cultivée (m²)</label
+                ><input id="fSurf" type="number" min="1" value="800" />
+              </div>
+            </div>
+            <p class="hint" id="capHint"></p>
+            <div class="grid2">
+              <div class="field">
+                <label for="fQty">Quantité prévue (kg)</label
+                ><input id="fQty" type="number" min="1" value="60" />
+              </div>
+              <div class="field">
+                <label for="fPrice">Prix par kg (F)</label
+                ><input id="fPrice" type="number" min="1" value="250" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="fDate">Date de récolte</label
+              ><input id="fDate" type="date" value="2027-03-15" />
+            </div>
+            <p class="err" id="offerErr" role="alert"></p>
+            <button class="btn" type="submit">Publier l’offre</button>
+          </form>
+
+          <div class="panel">
+            <h2 class="sec-title">Mes offres</h2>
+            <div class="list" id="myOffers"></div>
+          </div>
+
+          <div class="panel">
+            <h2 class="sec-title">Commandes à honorer</h2>
+            <div class="list" id="myOrders"></div>
+          </div>
+        </section>
+
+        <!-- VUE CLIENT -->
+        <section class="view" id="view-client" aria-label="Vue client" hidden>
+          <div class="panel">
+            <h2 class="sec-title">Offres près de vous</h2>
+            <div
+              class="filters"
+              id="filters"
+              role="group"
+              aria-label="Filtrer par produit"
+            ></div>
+            <div class="list" id="catalogue"></div>
+          </div>
+
+          <form class="panel" id="orderForm" hidden novalidate>
+            <h2 class="sec-title" id="sheetTitle">Ma précommande</h2>
+            <p class="sub" id="sheetSub"></p>
+            <div class="field">
+              <label for="oQty">Quantité (kg)</label
+              ><input id="oQty" type="number" min="1" value="10" />
+            </div>
+            <fieldset>
+              <legend>Remise</legend>
+              <div class="choices">
+                <label class="choice"
+                  ><input
+                    type="radio"
+                    name="mode"
+                    value="Retrait"
+                    checked
+                  /><span>Retrait</span></label
+                >
+                <label class="choice"
+                  ><input type="radio" name="mode" value="Livraison" /><span
+                    >Livraison</span
+                  ></label
+                >
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Paiement</legend>
+              <div class="choices">
+                <label class="choice"
+                  ><input type="radio" name="pay" value="Wave" checked /><span
+                    >Wave</span
+                  ></label
+                >
+                <label class="choice"
+                  ><input type="radio" name="pay" value="Orange Money" /><span
+                    >Orange Money</span
+                  ></label
+                >
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="oPhone">Numéro de téléphone</label
+              ><input
+                id="oPhone"
+                type="tel"
+                inputmode="tel"
+                placeholder="77 000 00 00"
+                value="77 123 45 67"
+              />
+            </div>
+            <div class="total"><span>Total</span><span id="oTotal"></span></div>
+            <p class="hint">
+              Votre argent reste bloqué chez le prestataire de paiement jusqu’à
+              la remise.
+            </p>
+            <p class="err" id="orderErr" role="alert"></p>
+            <div class="actions">
+              <button class="btn" type="submit">Payer</button
+              ><button class="btn alt" type="button" id="oCancel">
+                Annuler
+              </button>
+            </div>
+          </form>
+
+          <div class="panel">
+            <h2 class="sec-title">Mes commandes</h2>
+            <div class="list" id="clientOrders"></div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="side">
+        <div class="panel" style="gap: 20px">
+          <div>
+            <h2 class="sec-title">Circuit de l’argent</h2>
+            <p class="sub">
+              Mbay Direct ne garde jamais l’argent : un prestataire de paiement
+              agréé le conserve.
+            </p>
+          </div>
+          <div class="money" id="money"></div>
+          <div>
+            <h2 class="sec-title" style="margin-bottom: 10px">
+              Journal de la démo
+            </h2>
+            <ul class="log" id="log" aria-live="polite"></ul>
+          </div>
+          <div class="actions">
+            <button class="btn alt small" type="button" id="reset">
+              Recommencer la démo
+            </button>
+          </div>
+          <p class="note">
+            Les rendements (kg par m²) sont des valeurs moyennes d’illustration.
+            Les données de cette page sont des exemples.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        var COMMISSION = 0.1;
+        var SAFETY = 0.8;
+        var YIELD = {
+          Maïs: 0.15,
+          Manioc: 1.0,
+          Niébé: 0.08,
+          Arachide: 0.12,
+          Mil: 0.1,
+        };
+        var ME = "Samba";
+        var state,
+          view = "producteur",
+          filter = "Tous",
+          pending = null,
+          sinistreAsk = null;
+
+        function seed() {
+          return {
+            nextId: 10,
+            offers: [
+              {
+                id: 1,
+                produit: "Maïs",
+                producteur: "GIE Tamba Yaax",
+                prix: 240,
+                qty: 120,
+                date: "2027-03-18",
+                status: "active",
+              },
+              {
+                id: 2,
+                produit: "Maïs",
+                producteur: ME,
+                prix: 250,
+                qty: 50,
+                date: "2027-03-15",
+                status: "active",
+              },
+              {
+                id: 3,
+                produit: "Manioc",
+                producteur: "Aïssatou",
+                prix: 200,
+                qty: 80,
+                date: "2027-03-20",
+                status: "active",
+              },
+              {
+                id: 4,
+                produit: "Niébé",
+                producteur: "Coumba",
+                prix: 450,
+                qty: 50,
+                date: "2027-03-25",
+                status: "active",
+              },
+            ],
+            orders: [
+              {
+                id: 1,
+                offerId: 2,
+                qty: 10,
+                prix: 250,
+                total: 2500,
+                mode: "Retrait",
+                pay: "Wave",
+                status: "paid_held",
+              },
+            ],
+            log: [
+              {
+                t: now(),
+                text: "Exemple : une précommande de 10 kg de maïs (2 500 F) est payée et bloquée.",
+              },
+            ],
+          };
+        }
+        function now() {
+          return new Date().toLocaleTimeString("fr-FR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+        function fmt(n) {
+          return Math.round(n).toLocaleString("fr-FR") + " F";
+        }
+        function fdate(s) {
+          var d = new Date(s + "T12:00:00");
+          return isNaN(d)
+            ? s
+            : d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+        }
+        function $(id) {
+          return document.getElementById(id);
+        }
+        function offer(id) {
+          return state.offers.filter(function (o) {
+            return o.id === id;
+          })[0];
+        }
+        function say(text) {
+          state.log.unshift({ t: now(), text: text });
+        }
+        function esc(s) {
+          return String(s).replace(/[&<>"]/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+          });
+        }
+
+        var STATUS = {
+          paid_held: ["Payée, argent bloqué", "wait"],
+          ready: ["Prête à remettre", "wait"],
+          released: ["Remise confirmée, producteur payé", "ok"],
+          refunded: ["Remboursée", "bad"],
+        };
+
+        /* ---------- Producteur ---------- */
+        function cap() {
+          var s = Number($("fSurf").value) || 0,
+            y = YIELD[$("fProd").value] || 0.1;
+          return Math.floor(s * y * SAFETY);
+        }
+        function updateCap() {
+          var c = cap(),
+            q = Number($("fQty").value) || 0,
+            h = $("capHint");
+          var base =
+            "Plafond conseillé : " +
+            c.toLocaleString("fr-FR") +
+            " kg (surface × rendement moyen × 80 % de marge de sécurité).";
+          if (q > c) {
+            h.className = "hint bad";
+            h.textContent = base + " Votre quantité est trop élevée.";
+          } else {
+            h.className = "hint";
+            h.textContent = base;
+          }
+        }
+        $("offerForm").addEventListener("input", updateCap);
+        $("offerForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var q = Number($("fQty").value),
+            p = Number($("fPrice").value),
+            err = $("offerErr");
+          if (!(q > 0) || !(p > 0) || !$("fDate").value) {
+            err.textContent =
+              "Remplissez la quantité, le prix et la date de récolte.";
+            return;
+          }
+          if (q > cap()) {
+            err.textContent =
+              "Quantité refusée : elle dépasse le plafond de " +
+              cap().toLocaleString("fr-FR") +
+              " kg. Réduisez-la ou ajoutez de la surface.";
+            return;
+          }
+          err.textContent = "";
+          var o = {
+            id: state.nextId++,
+            produit: $("fProd").value,
+            producteur: ME,
+            prix: p,
+            qty: q,
+            date: $("fDate").value,
+            status: "active",
+          };
+          state.offers.unshift(o);
+          say(
+            "Samba publie une offre : " +
+              o.produit +
+              ", " +
+              q +
+              " kg à " +
+              p +
+              " F/kg, récolte le " +
+              fdate(o.date) +
+              ".",
+          );
+          render();
+        });
+
+        function reportSinistre(id) {
+          var o = offer(id);
+          if (!o) return;
+          o.status = "sinistre";
+          o.qty = 0;
+          sinistreAsk = null;
+          say(
+            "Samba signale une catastrophe naturelle sur son offre de " +
+              o.produit +
+              ". Le relais confirme sur place.",
+          );
+          var hit = state.orders.filter(function (x) {
+            return (
+              x.offerId === id &&
+              (x.status === "paid_held" || x.status === "ready")
+            );
+          });
+          if (!hit.length) say("Aucune commande n’est touchée.");
+          hit.forEach(function (x) {
+            var alt = state.offers.filter(function (a) {
+              return (
+                a.id !== id &&
+                a.status === "active" &&
+                a.produit === o.produit &&
+                a.qty >= x.qty
+              );
+            })[0];
+            if (alt) {
+              alt.qty -= x.qty;
+              x.offerId = alt.id;
+              say(
+                "Commande de " +
+                  x.qty +
+                  " kg de " +
+                  o.produit +
+                  " : servie par " +
+                  alt.producteur +
+                  " au même prix. Le client ne perd rien.",
+              );
+            } else {
+              x.status = "refunded";
+              say(
+                "Commande de " +
+                  x.qty +
+                  " kg de " +
+                  o.produit +
+                  " : aucun autre producteur disponible, " +
+                  fmt(x.total) +
+                  " remboursés au client.",
+              );
+            }
+          });
+          say("Samba n’est pas pénalisé : force majeure prouvée.");
+          render();
+        }
+        function markReady(id) {
+          var x = state.orders.filter(function (o) {
+            return o.id === id;
+          })[0];
+          if (!x) return;
+          x.status = "ready";
+          say(
+            "Samba a récolté et marqué la commande de " +
+              x.qty +
+              " kg comme prête.",
+          );
+          render();
+        }
+        function confirmReceipt(id) {
+          var x = state.orders.filter(function (o) {
+            return o.id === id;
+          })[0];
+          if (!x) return;
+          var com = Math.round(x.total * COMMISSION);
+          x.status = "released";
+          say(
+            "Le client confirme la réception. " +
+              fmt(x.total - com) +
+              " libérés au producteur, " +
+              fmt(com) +
+              " de commission Mbay Direct (10 %).",
+          );
+          render();
+        }
+
+        function renderProducer() {
+          var mine = state.offers.filter(function (o) {
+            return o.producteur === ME;
+          });
+          $("myOffers").innerHTML = mine.length
+            ? mine
+                .map(function (o) {
+                  var sin = o.status === "sinistre";
+                  var act = "";
+                  if (!sin) {
+                    act =
+                      sinistreAsk === o.id
+                        ? '<button class="btn danger small" data-act="sin-ok" data-id="' +
+                          o.id +
+                          '">Confirmer le signalement</button><button class="btn alt small" data-act="sin-no">Annuler</button>'
+                        : '<button class="btn alt small" data-act="sin" data-id="' +
+                          o.id +
+                          '">Signaler une catastrophe naturelle</button>';
+                  }
+                  return (
+                    '<div class="card"><div class="card-top"><div><h3>' +
+                    esc(o.produit) +
+                    '</h3><div class="meta"><span>' +
+                    o.qty +
+                    " kg restants</span><span>Récolte le " +
+                    fdate(o.date) +
+                    '</span></div></div><div class="price">' +
+                    o.prix +
+                    " F/kg</div></div>" +
+                    (sin
+                      ? '<span class="chip bad">Sinistre déclaré</span>'
+                      : '<span class="chip ok">Offre ouverte</span>') +
+                    (act ? '<div class="actions">' + act + "</div>" : "") +
+                    "</div>"
+                  );
+                })
+                .join("")
+            : '<p class="empty">Aucune offre pour le moment. Publiez la première ci-dessus.</p>';
+
+          var ids = mine.map(function (o) {
+            return o.id;
+          });
+          var mo = state.orders.filter(function (x) {
+            return ids.indexOf(x.offerId) > -1;
+          });
+          $("myOrders").innerHTML = mo.length
+            ? mo
+                .map(function (x) {
+                  var o = offer(x.offerId),
+                    st = STATUS[x.status];
+                  var act =
+                    x.status === "paid_held"
+                      ? '<button class="btn small" data-act="ready" data-id="' +
+                        x.id +
+                        '">J’ai récolté : marquer prête</button>'
+                      : x.status === "ready"
+                        ? '<span class="sub">En attente de la confirmation du client.</span>'
+                        : x.status === "released"
+                          ? '<span class="sub">Vous recevez ' +
+                            fmt(x.total - Math.round(x.total * COMMISSION)) +
+                            " après commission.</span>"
+                          : "";
+                  return (
+                    '<div class="card"><div class="card-top"><div><h3>' +
+                    esc(o.produit) +
+                    " · " +
+                    x.qty +
+                    ' kg</h3><div class="meta"><span>' +
+                    esc(x.mode) +
+                    "</span><span>" +
+                    esc(x.pay) +
+                    '</span></div></div><div class="price">' +
+                    fmt(x.total) +
+                    "</div></div>" +
+                    '<span class="chip ' +
+                    st[1] +
+                    '">' +
+                    st[0] +
+                    "</span>" +
+                    (act ? '<div class="actions">' + act + "</div>" : "") +
+                    "</div>"
+                  );
+                })
+                .join("")
+            : '<p class="empty">Aucune commande. Passez en vue Client pour en faire une.</p>';
+        }
+
+        /* ---------- Client ---------- */
+        function renderClient() {
+          var prods = ["Tous"].concat(Object.keys(YIELD));
+          $("filters").innerHTML = prods
+            .map(function (p) {
+              return (
+                '<button type="button" data-filter="' +
+                p +
+                '" aria-pressed="' +
+                (filter === p) +
+                '">' +
+                p +
+                "</button>"
+              );
+            })
+            .join("");
+          var list = state.offers.filter(function (o) {
+            return (
+              o.status === "active" &&
+              (filter === "Tous" || o.produit === filter)
+            );
+          });
+          $("catalogue").innerHTML = list.length
+            ? list
+                .map(function (o) {
+                  var out = o.qty <= 0;
+                  return (
+                    '<div class="card"><div class="card-top"><div><h3>' +
+                    esc(o.produit) +
+                    " · " +
+                    esc(o.producteur) +
+                    '</h3><div class="meta"><span>' +
+                    o.qty +
+                    " kg disponibles</span><span>Récolte le " +
+                    fdate(o.date) +
+                    '</span></div></div><div class="price">' +
+                    o.prix +
+                    " F/kg</div></div>" +
+                    '<div class="actions"><button class="btn small" data-act="order" data-id="' +
+                    o.id +
+                    '"' +
+                    (out ? " disabled" : "") +
+                    ">" +
+                    (out ? "Épuisé" : "Précommander") +
+                    "</button></div></div>"
+                  );
+                })
+                .join("")
+            : '<p class="empty">Aucune offre pour ce produit pour le moment.</p>';
+
+          $("clientOrders").innerHTML = state.orders.length
+            ? state.orders
+                .map(function (x) {
+                  var o = offer(x.offerId),
+                    st = STATUS[x.status];
+                  var act =
+                    x.status === "ready"
+                      ? '<button class="btn small" data-act="receive" data-id="' +
+                        x.id +
+                        '">Confirmer la réception</button>'
+                      : x.status === "paid_held"
+                        ? '<span class="sub">En attente de la récolte.</span>'
+                        : "";
+                  return (
+                    '<div class="card"><div class="card-top"><div><h3>' +
+                    esc(o.produit) +
+                    " · " +
+                    x.qty +
+                    ' kg</h3><div class="meta"><span>' +
+                    esc(o.producteur) +
+                    "</span><span>" +
+                    esc(x.mode) +
+                    "</span><span>" +
+                    esc(x.pay) +
+                    '</span></div></div><div class="price">' +
+                    fmt(x.total) +
+                    "</div></div>" +
+                    '<span class="chip ' +
+                    st[1] +
+                    '">' +
+                    st[0] +
+                    "</span>" +
+                    (act ? '<div class="actions">' + act + "</div>" : "") +
+                    "</div>"
+                  );
+                })
+                .join("")
+            : '<p class="empty">Aucune commande pour le moment.</p>';
+        }
+        function openOrder(id) {
+          var o = offer(id);
+          if (!o) return;
+          pending = id;
+          $("sheetTitle").textContent = "Ma précommande : " + o.produit;
+          $("sheetSub").textContent =
+            o.producteur +
+            " · " +
+            o.prix +
+            " F/kg · " +
+            o.qty +
+            " kg disponibles";
+          $("oQty").max = o.qty;
+          $("oQty").value = Math.min(10, o.qty);
+          $("orderErr").textContent = "";
+          $("orderForm").hidden = false;
+          updateTotal();
+          $("orderForm").scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+          $("oQty").focus({ preventScroll: true });
+        }
+        function updateTotal() {
+          var o = offer(pending);
+          $("oTotal").textContent = o
+            ? fmt((Number($("oQty").value) || 0) * o.prix)
+            : "";
+        }
+        $("oQty").addEventListener("input", updateTotal);
+        $("oCancel").addEventListener("click", function () {
+          pending = null;
+          $("orderForm").hidden = true;
+        });
+        $("orderForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var o = offer(pending),
+            q = Number($("oQty").value),
+            err = $("orderErr");
+          var digits = $("oPhone").value.replace(/\D/g, "");
+          if (!o) return;
+          if (!(q >= 1) || q > o.qty) {
+            err.textContent =
+              "Choisissez une quantité entre 1 et " + o.qty + " kg.";
+            return;
+          }
+          if (digits.length < 9) {
+            err.textContent = "Entrez un numéro de téléphone à 9 chiffres.";
+            return;
+          }
+          var mode = document.querySelector('input[name="mode"]:checked').value,
+            pay = document.querySelector('input[name="pay"]:checked').value;
+          var x = {
+            id: state.nextId++,
+            offerId: o.id,
+            qty: q,
+            prix: o.prix,
+            total: q * o.prix,
+            mode: mode,
+            pay: pay,
+            status: "paid_held",
+          };
+          o.qty -= q;
+          state.orders.unshift(x);
+          say(
+            "Paiement de " +
+              fmt(x.total) +
+              " par " +
+              pay +
+              " reçu et bloqué chez le prestataire. Précommande de " +
+              q +
+              " kg de " +
+              o.produit +
+              " confirmée.",
+          );
+          pending = null;
+          $("orderForm").hidden = true;
+          render();
+        });
+
+        /* ---------- Argent et journal ---------- */
+        function renderSide() {
+          var held = 0,
+            paid = 0,
+            com = 0,
+            back = 0;
+          state.orders.forEach(function (x) {
+            if (x.status === "paid_held" || x.status === "ready")
+              held += x.total;
+            else if (x.status === "released") {
+              var c = Math.round(x.total * COMMISSION);
+              com += c;
+              paid += x.total - c;
+            } else if (x.status === "refunded") back += x.total;
+          });
+          $("money").innerHTML =
+            '<div class="held"><b>' +
+            fmt(held) +
+            "</b><small>Argent bloqué</small></div>" +
+            "<div><b>" +
+            fmt(paid) +
+            "</b><small>Versé aux producteurs</small></div>" +
+            "<div><b>" +
+            fmt(com) +
+            "</b><small>Commission (10 %)</small></div>" +
+            "<div><b>" +
+            fmt(back) +
+            "</b><small>Remboursé aux clients</small></div>";
+          $("log").innerHTML = state.log
+            .map(function (l) {
+              return (
+                "<li><time>" +
+                l.t +
+                "</time><span>" +
+                esc(l.text) +
+                "</span></li>"
+              );
+            })
+            .join("");
+        }
+
+        /* ---------- Vues, clics, démarrage ---------- */
+        function render() {
+          renderProducer();
+          renderClient();
+          renderSide();
+          updateCap();
+        }
+        function setView(v) {
+          view = v === "client" ? "client" : "producteur";
+          $("view-producteur").hidden = view !== "producteur";
+          $("view-client").hidden = view !== "client";
+          $("tabP").setAttribute("aria-pressed", view === "producteur");
+          $("tabC").setAttribute("aria-pressed", view === "client");
+          if (location.hash.slice(1) !== view) {
+            try {
+              history.replaceState(null, "", "#" + view);
+            } catch (e) {
+              location.hash = view;
+            }
+          }
+        }
+        $("tabP").addEventListener("click", function () {
+          setView("producteur");
+        });
+        $("tabC").addEventListener("click", function () {
+          setView("client");
+        });
+        window.addEventListener("hashchange", function () {
+          setView(location.hash.slice(1));
+        });
+        $("reset").addEventListener("click", function () {
+          state = seed();
+          pending = null;
+          sinistreAsk = null;
+          $("orderForm").hidden = true;
+          render();
+        });
+        document.addEventListener("click", function (e) {
+          var b = e.target.closest("[data-act],[data-filter]");
+          if (!b) return;
+          var id = Number(b.dataset.id);
+          if (b.dataset.filter) {
+            filter = b.dataset.filter;
+            return render();
+          }
+          switch (b.dataset.act) {
+            case "sin":
+              sinistreAsk = id;
+              return render();
+            case "sin-no":
+              sinistreAsk = null;
+              return render();
+            case "sin-ok":
+              return reportSinistre(id);
+            case "ready":
+              return markReady(id);
+            case "receive":
+              return confirmReceipt(id);
+            case "order":
+              return openOrder(id);
+          }
+        });
+
+        state = seed();
+        setView(location.hash.slice(1));
+        render();
+      })();
+    </script>
+  </body>
+</html>
